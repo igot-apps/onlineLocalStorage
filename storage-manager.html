@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save LocalStorage Online</title>
+</head>
+<body>
+    <h1>LocalStorage Online Saver</h1>
+
+    <button onclick="saveLocalStorage()">Save Data Online</button>
+    <button onclick="retrieveLocalStorage()">Retrieve Data and Replace LocalStorage</button>
+    <button onclick="sellAllData()">Sell (Delete) All Saved Data</button>
+    <button onclick="deleteDataById()">Delete Data by ID</button>
+
+    <script>
+        const API_URL = 'http://localhost:3000'; // Change to your server URL
+        const localStorageKey = 'betSlipInstances';  // Better name to indicate it's a key for localStorage
+
+        // Function to save data from localStorage to online storage
+        function saveLocalStorage() {
+            // Retrieve the latest data from localStorage
+            const data = localStorage.getItem(localStorageKey);
+            
+            if (!data) {
+                alert('No data available to save.');
+                return;
+            }
+
+            // Use localStorageKey as the name for saving
+            const name = localStorageKey;
+
+            // Save the data to online storage
+            fetch(`${API_URL}/save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,  // Use localStorageKey as the name
+                    data: data,  // Use the data from localStorage
+                }),
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+            })
+            .catch(error => {
+                console.error('Error saving data:', error);
+            });
+        }
+
+        // Function to retrieve data from the server and replace localStorage
+        function retrieveLocalStorage() {
+            const name = localStorageKey;
+
+            fetch(`${API_URL}/retrieve/${name}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.data) {
+                        localStorage.setItem(localStorageKey, result.data);  // Replace localStorage with retrieved data
+                        alert('LocalStorage replaced with online data');
+                    } else {
+                        alert('No data found with that name.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error retrieving data:', error);
+                });
+        }
+
+        // Function to sell (delete) all saved data
+        function sellAllData() {
+            fetch(`${API_URL}/sell-all`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+            })
+            .catch(error => {
+                console.error('Error deleting all data:', error);
+            });
+        }
+
+        // Function to delete data by a specific ID (name)
+        function deleteDataById() {
+            const name = localStorageKey;
+            
+            if (!name) {
+                alert('Name is required to delete the data.');
+                return;
+            }
+
+            fetch(`${API_URL}/delete/${name}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+            })
+            .catch(error => {
+                console.error('Error deleting data by ID:', error);
+            });
+        }
+    </script>
+</body>
+</html>
